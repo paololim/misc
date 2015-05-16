@@ -1,0 +1,125 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'typed_class'
+require 'postgres-pr/connection'
+load File.join(File.dirname(__FILE__), 'lib/database.rb')
+
+class Campus
+
+  MORRIS_PLAINS = 1
+  NEW_MILFORD = 2
+
+end
+
+class Grade < TypedClass
+
+  SELECT_SQL = "select * from grades where true "
+
+  field :id, Integer
+  field :name, String
+  field :position, Integer
+
+  def Grade.find_by_name(name)
+    SELECT_SQL + " and lower(name) = '%s' " % name.to_s.strip.downcase
+  end
+
+  def Grade.find_by_id(grade_id)
+    SELECT_SQL + " and id = %s " % grade_id.to_i
+  end
+
+  def Grade.find_by_position(position)
+    SELECT_SQL + " and position = %s " % position.to_i
+  end
+
+  def Grade.from_hash(rec)
+    Grade.new(rec[:id].to_i, rec[:name], rec[:position].to_i)
+  end
+
+  def next_grade
+    Grade.find_by_position(position + 1)
+  end
+
+end
+
+class Student < TypedClass
+
+  INSERT_SQL = "insert into students (name) values ('%s');"
+  SELECT_SQL = "select id, name from students where true "
+
+  field :id, option(Integer)
+  field :name, String
+
+  def insert
+    INSERT_SQL % [name]
+  end
+
+  def Student.find_by_name(name)
+    SELECT_SQL + " and lower(name) = '%s' " % name.to_s.strip.downcase
+  end
+
+end
+
+class Enrollment < TypedClass
+
+  INSERT_SQL = "insert into enrollments (student_id, grade_id, campus_id, enrolled_at) values (%s, %s, %s, '%s');"
+
+  field :student_id, Integer
+  field :grade_id, Integer
+  field :campus_id, Integer
+  field :enrolled_at, DateTime
+
+  def insert
+    INSERT_SQL % [student_id, grade_id, campus_id, enrolled_at]
+  end
+
+  def Enrollment.next_year(db, enrollment)
+    year, month, day = enrollment.enrolled_at.strftime("%Y-%m-%d").split("-").map(&:to_i)
+    next_year = DateTime.parse("%s-%s-%s" % [year+1, month, day])
+
+    if next_year < DateTime.now
+      grade = Grade.from_hash(db.select_one(Grade.find_by_id(enrollment.grade_id)))
+      if rec = db.select_one_or_nil(grade.next_grade)
+        next_grade = Grade.from_hash(rec)
+        return Enrollment.new(enrollment.student_id, next_grade.id, enrollment.campus_id, next_year)
+      end
+    end
+    nil
+  end
+
+end
+
+db = Database.new("web", "fabc")
+
+IO.readlines("data/fabc-student-sample.csv").each do |line|
+  name, first_day, campus, grade_entered, rest = line.strip.split(",").map(&:strip)
+  if name == "student" || name == ""
+    next
+  end
+  rec = db.select_one(Grade.find_by_name(grade_entered))
+  grade = Grade.from_hash(rec)
+
+  month, day, year = first_day.split("/").map(&:strip).map(&:to_i)
+  enrolled_at = DateTime.parse("%s-%s-%s" % [2000 + year, month, day])
+
+  db.execute(Student.new(name).insert)
+
+  rec = db.select_one(Student.find_by_name(name))
+  student = Student.new(rec[:name], :id => rec[:id].to_i)
+
+  if rand(100) < 83
+    campus_id = Campus::NEW_MILFORD
+  else
+    campus_id = Campus::MORRIS_PLAINS
+  end
+
+  enrollment = Enrollment.new(student.id, grade.id, campus_id, enrolled_at)
+  db.execute(enrollment.insert)
+
+  while enrollment = Enrollment.next_year(db, enrollment)
+    # 75% of the time, have the students re-enroll
+    if rand(100) < 75
+      db.execute(enrollment.insert)
+    end
+  end
+end

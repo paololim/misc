@@ -1,0 +1,26 @@
+#!/usr/bin/env ruby
+
+def load_dictionary
+  words = []
+  IO.readlines("fr.dic").each do |word|
+    word.strip!
+    if word != ""
+      words << word
+    end
+  end
+  words.sort
+end
+
+puts "Enter letters (space separated):"
+letters = gets.strip.split
+letters.sort!
+
+sized = load_dictionary.select { |w| w.length == letters.size }
+
+sized.each do |s|
+  this_word = s.split("")
+
+  if letters == this_word.sort
+    puts s
+  end
+end

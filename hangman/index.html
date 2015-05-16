@@ -1,0 +1,169 @@
+<html>
+ <head>
+  <title>Hangman</title>
+ </head>
+
+<body>
+ <h1>Hangman</h1>
+ <hr/>
+
+ <div style="float:right">
+   <img id="img_man" src="images/hangman-1.jpg" height="400" style="display:none"/>
+  </div>
+
+ <p>
+  <div id="board"></div>
+ </p>
+
+ <p>
+  <div id="guess" style="display:none">
+    <form id="form">
+      Letter: <input id="letter" type="text" maxlength="1" size="5"/>
+      <input type="submit" value="Guess" id="submit"/>
+    </form>
+
+    <p>
+      Misses: <div id="number_misses">0 / 11</div>
+      <div id="misses"></div>
+    </p>
+
+  </div>
+ </p>
+
+<div id="game_result"></div>
+
+ <p>
+  <a id="new_game" href="#">New game</a>
+ </p>
+
+ <script src="jquery-2.0.3.min.js"></script>
+ <script>
+   var maxGuesses = 11;
+   var words = Array("bay", "day", "hay", "may", "pay", "ray", "say", "way", "fray", "gray", "play", "pray", "stray", "bake", "cake", "fake",
+                     "lake", "make", "take", "ate", "date", "fate", "gate", "hate", "late", "mate", "rate", "age", "cage", "page", "rage",
+                     "damp", "lamp", "stamp", "bow", "how", "now", "cow", "wow", "here", "there", "tie", "pie", "lie", "diebike", "dike", "hike",
+                     "like", "pike", "by", "cry", "dry", "fry", "try", "toe", "hoe", "paw", "raw", "saw", "bow", "low", "mow", "tow", "crow",
+                     "stow", "all", "ball", "call", "fall", "hall", "mall", "tall", "wall", "ask", "bask", "mask", "task", "had", "have", "as",
+                     "if", "in", "is", "with", "bent", "dent", "lent", "tent", "bee", "beef", "beet", "feet", "meet", "beep", "deep", "jeep",
+                     "peep", "bell", "fell", "well", "book", "cook", "took", "bold", "cold", "fold", "hold", "mold", "sold", "told", "cone",
+                     "bone", "one", "two", "three", "four", "five", "six", "and", "band", "hand", "land", "cube", "tube", "eat", "heat", "meat",
+                     "seat", "dust", "gust", "must", "rust", "law", "paw", "raw", "saw", "find", "hind", "kind", "mind", "cat", "cow", "bird",
+                     "deer", "dog", "duck", "frog", "lion", "ball", "doll", "game", "toy", "train", "get", "got", "say", "said", "car", "bus",
+                     "boat", "best", "pest", "rest", "test", "west", "hide", "ride", "wide", "bump", "dump", "hump", "lump", "pump", "dad",
+                     "mom", "baby", "girl", "boy", "his", "her", "mine", "ours", "they", "them", "him", "her", "it", "bowl", "fork", "spoon",
+                     "home", "lawn", "mall", "pond", "room", "zoo", "plane", "truck");
+
+   var pickWord = function() {
+      var index = Math.floor(Math.random()*words.length);
+      return words[index];
+   };
+   var currentWord = "";
+   var currentGuesses = Array();
+
+   var matches = function(letter) {
+     return currentWord.indexOf(letter) >= 0;
+   };
+
+   var numberBadGuesses = function() {
+     var num = 0;
+     for ( var i = 0; i < currentGuesses.length; i++ ) {
+       var letter = currentGuesses[i];
+       if (!matches(letter)) {
+         num += 1;
+       }
+     }
+     return num;
+   };
+
+   var hasWon = function() {
+     var allLetters = currentWord.split("");
+     for ( var i = 0; i < allLetters.length; i++ ) {
+       var letter = allLetters[i];
+       if (currentGuesses.indexOf(letter) < 0) {
+         return false;
+       }
+     }
+     return true;
+   };
+
+   var hasLost = function() {
+     return numberBadGuesses() >= maxGuesses;
+   };
+
+   var drawBoard = function() {
+     var s = "";
+     var allLetters = currentWord.split("");
+     for ( var i = 0; i < allLetters.length; i++ ) {
+       var letter = allLetters[i];
+       if (currentGuesses.indexOf(letter) >= 0) {
+         s += " " + letter + " ";
+       } else {
+         s += " _ ";
+       }
+     }
+     $('#board').html(s);
+   };
+
+   var reset = function() {
+     currentWord = pickWord().toLowerCase();
+     currentGuesses = Array();
+     drawBoard();
+     $('#misses').html("");
+     $('#number_misses').html("0 / " + maxGuesses);
+   };
+
+   var gameOver = function(message) {
+     $('#guess').hide();
+     $('#game_result').html(message);
+     $('#game_result').show();
+   };
+
+   $('#form').on("submit", function() {
+     var value = $('#letter').val().toLowerCase();
+
+     if (currentGuesses.indexOf(value) >= 0) {
+       alert("Already guessed " + value);
+     } else {
+       currentGuesses.push(value);
+
+       if (!matches(value)) {
+         var misses = $('#misses').html();
+         var numberBad = numberBadGuesses();
+         $('#misses').html(misses + " " + value);
+         $('#number_misses').html(numberBad + " / " + maxGuesses);
+         $('#img_man').attr("src", "images/hangman-" + numberBad + ".jpg");
+         $('#img_man').show();
+       }
+
+       drawBoard();
+       $('#letter').val("");
+
+       if (hasWon()) {
+         var numberBad = numberBadGuesses();
+         if (numberBad == 0) {
+           gameOver("Congratulations - you won with no bad guesses");
+         } else if (numberBad == 1) {
+           gameOver("Congratulations - you won with only 1 bad guess");
+         } else {
+           gameOver("Congratulations - you won with " + numberBad + " bad guesses");
+         }
+       }
+       if (hasLost()) {
+         gameOver("Bad luck - the word was " + currentWord);
+       }
+     }
+   });
+
+   $(function() {
+     $('#new_game').click(function() {
+       reset();
+       drawBoard();
+       $('#game_result').hide();
+       $('#guess').show();
+       $('#misses').html();
+       $('#letter').focus();
+     });
+   });
+  </script>
+</body>
+</html>

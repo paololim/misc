@@ -1,0 +1,14 @@
+#!/usr/bin/env ruby
+
+def run(command)
+  puts command
+  if !system(command)
+    msg = "Failed to run %s" % command
+    raise msg
+  end
+end
+
+run("psql -U postgres -c 'drop database if exists fabc' postgres")
+run("psql -U postgres -c 'create database fabc --owner web' postgres")
+run("psql -U web -f schema.sql fabc")
+run("load-data")

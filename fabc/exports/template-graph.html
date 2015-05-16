@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+  <head>
+    <title>%%title%%</title>
+    <script src="../chart.min.js"></script>
+  </head>
+  <body>
+
+  <h1>%%title%%</h1>
+
+  <canvas id="canvas" height="450" width="600"></canvas>
+
+  <script>
+
+    var data = {
+      labels : %%labels%%,
+      datasets : %%data_sets%%
+    }
+
+  new Chart(document.getElementById("canvas").getContext("2d")).Line(data);
+
+  </script>
+
+  <p>%%legend%%
+  </body>
+</html>

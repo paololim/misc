@@ -1,0 +1,315 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'typed_class'
+require 'postgres-pr/connection'
+require 'faster_csv'
+require 'json'
+
+@@TMP_FILE_COUNTER = 1
+
+load File.join(File.dirname(__FILE__), 'lib/database.rb')
+
+db = Database.new("web", "fabc")
+
+def make_safe_name(name)
+  name.strip.downcase.gsub(/[^0-9a-z\-]/, '-').gsub(/\-\-+/, '-')
+end
+
+def query_to_csv(db, sql)
+  path = "/tmp/user-mbryzek-fabc-export-data-%s.csv" % @@TMP_FILE_COUNTER
+  @@TMP_FILE_COUNTER += 1
+  headers = nil
+
+  begin
+    FasterCSV.open(path, "w") do |out|
+      db.select_all(sql).each do |rec|
+        if headers.nil?
+          headers = rec.keys.map(&:to_s).sort
+          if headers.include?("count")
+            headers = headers - ['count']
+            headers << 'count'
+          end
+          out << headers
+          headers = headers.map(&:to_sym)
+        end
+        out << headers.map { |name| rec[name] }
+      end
+    end
+    yield path
+  ensure
+    system("rm -f #{path}")
+  end
+end
+
+class Dataset
+
+  def initialize(values, color)
+    @values = values
+    @color = color
+  end
+
+  def to_hash
+    {
+      :fillColor => "rgba(#{@color},#{@color},#{@color},0.5)",
+      :strokeColor => "rgba(#{@color},#{@color},#{@color},1)",
+      :pointColor => "rgba(#{@color},#{@color},#{@color},1)",
+      :pointStrokeColor => "#fff",
+      :data => @values
+    }
+  end
+end
+
+class Template
+
+  def initialize(path)
+    @template = IO.read(path)
+    @variables = @template.split.map do |word|
+      if md = word.match(/%%([^%]+)%%/)
+        md[1]
+      else
+        nil
+      end
+    end.compact.map(&:to_sym).uniq
+  end
+
+  def parse(data)
+    this_template = @template.dup
+    @variables.each do |name|
+      if !data.has_key?(name)
+        raise "Missing key[%s]" % name
+      end
+
+      value = data.delete(name)
+      this_template.gsub!(/%%#{name}%%/, value.to_s)
+    end
+    this_template
+  end
+
+end
+
+
+def read_csv(path)
+  all = []
+  headers = nil
+  FasterCSV.foreach(path) do |row|
+    if headers.nil?
+      headers = row.map(&:to_sym)
+    else
+      rec = {}
+      headers.each_with_index do |name, i|
+        rec[name] = row[i]
+      end
+      all << rec
+    end
+  end
+  all
+end
+
+def csv_file_to_graph(title, path, opts={})
+  x_axis_field = opts.delete(:x).to_sym
+  y_axis_field = opts.delete(:y).to_sym
+  if !opts.empty?
+    raise "invalid opts: #{opts.keys.inspect}"
+  end
+
+  data_sets = {}
+  labels = []
+
+  read_csv(path).each do |rec|
+    count = rec.delete(y_axis_field)
+    if count.nil?
+      raise "Missing field[%s] from rec: %s" % [y_axis_field, rec.inspect]
+    end
+    this_label = rec.delete(x_axis_field)
+    if this_label.nil?
+      raise "Missing field[%s] from rec: %s" % [x_axis_field, rec.inspect]
+    end
+    labels << this_label
+
+    if rec.keys.empty?
+      data_sets[y_axis_field] ||= []
+      data_sets[y_axis_field] << count
+    else
+      if rec.keys.size > 1
+        raise "Only supports 1 additional field: #{rec.keys.inspect}"
+      end
+      rec.keys.each do |name|
+        value = rec[name]
+        data_sets[value] ||= []
+        data_sets[value] << count
+      end
+    end
+  end
+
+  colors = [60, 100, 140, 180, 220]
+  color_index = 0
+  legend = "<table>\n"
+  tds = []
+  data_sets.each do |name, values|
+    color = colors[color_index % colors.size]
+    color_index += 1
+    ds = Dataset.new(values, color)
+    tds << ds.to_hash
+    legend << "  <tr><td width='50' style='background-color: rgba(#{color},#{color},#{color},0.75)'>&nbsp;</td><td>#{name}</td></tr>\n"
+  end
+  legend << "</table>\n"
+
+  parsed = Template.new("exports/template-graph.html").parse(:title => title.strip,
+                                                             :labels => labels.uniq.to_json,
+                                                             :data_sets => tds.to_json,
+                                                             :legend => legend)
+
+  filename = make_safe_name(title.strip.downcase.gsub(/[^0-9a-z\-]/, '-').gsub(/\-\-+/, '-'))
+  output = "exports/graphs/%s.html" % filename
+  File.open(output, "w") { |out| out << parsed }
+  output
+end
+
+def generate(db, title, query, opts={})
+  x = opts.delete(:x)
+  y = opts.delete(:y)
+  if !opts.empty?
+    raise "Invalid opts: #{opts.inspect}"
+  end
+
+  query_to_csv(db, query) do |path|
+    puts csv_file_to_graph(title, path, :x => x, :y => y)
+  end
+end
+
+sql = <<-"eos"
+  select school_years.name as school_year, count(*) as number_students
+    from school_years
+    left join enrollments on enrollments.enrolled_at >= school_years.begins_at and enrollments.enrolled_at < school_years.ends_at
+  group by school_years.name, school_years.begins_at
+  order by school_years.begins_at
+eos
+
+generate(db, "Enrollment: Overall", sql, :x => "school_year", :y => "number_students")
+
+campuses = db.select_all("select id, name from campuses")
+
+campuses.each do |rec|
+  sql = <<-"eos"
+    select school_years.name as school_year, count(*) as number_students
+      from school_years
+      left join enrollments on enrollments.enrolled_at >= school_years.begins_at and enrollments.enrolled_at < school_years.ends_at and enrollments.campus_id = #{rec[:id]}
+    group by school_years.name, school_years.begins_at
+    order by school_years.begins_at
+  eos
+
+  generate(db, "Enrollment: %s " % rec[:name], sql, :x => "school_year", :y => "number_students")
+end
+
+
+# for students that joined in 2007, what percentage remained each of next successive years?
+
+def enrollment_rate_by_grade(db, campus=nil)
+  grades = db.select_all("select id, name from grades order by position")
+
+  keys = []
+  values = []
+  grades.each_with_index do |grade, index|
+    next_grade = grades[index + 1]
+    if next_grade.nil?
+      break
+    end
+
+    sql = <<-"eos"
+        select coalesce(sum(case when e2.id is not null then 1 else 0 end), 0) as reenrolled,
+               count(*) as total
+          from enrollments
+          join grades on grades.id = enrollments.grade_id
+          left join enrollments e2 on e2.grade_id = #{next_grade[:id]}
+                                  and e2.student_id = enrollments.student_id
+         where enrollments.grade_id = #{grade[:id]}
+    eos
+
+    if campus
+      sql << " and enrollments.campus_id = #{campus[:id]}"
+    end
+
+    rec = db.select_one(sql)
+
+    total = rec[:total].to_i
+    keys << grade[:name]
+    if total == 0
+      values << 0
+    else
+      values << rec[:reenrolled].to_f/total*100
+    end
+  end
+
+  name = campus ? campus[:name] : "all"
+  path = "/tmp/export-data-reenrollment-by-grade-%s.csv" % [make_safe_name(name)]
+  FasterCSV.open(path, "w") do |out|
+    out << ['grade', '% enrolled in next grade'].flatten
+    keys.each_with_index do |key, index|
+      out << [key, values[index]]
+    end
+  end
+  path
+end
+
+# What percentage of students continue from 07 - 08 - 09
+def enrollment_rate(db, campus=nil)
+  years = [2007, 2008, 2009, 2010, 2011, 2012]
+  grades = db.select_all("select id, name from grades order by position")
+
+  data = {}
+  grades.each_with_index do |grade, index|
+    next_grade = grades[index + 1]
+    if next_grade.nil?
+      break
+    end
+
+    this_grade = []
+    data[grade[:name]] = this_grade
+    years.each do |year|
+      next_year = year + 1
+
+      sql = <<-"eos"
+        select coalesce(sum(case when e2.id is null then 1 else 0 end), 0) as abandoned,
+               coalesce(sum(case when e2.id is not null then 1 else 0 end), 0) as reenrolled,
+               count(*) as total
+          from enrollments
+          left join grades on grades.id = enrollments.grade_id
+          left join enrollments e2 on e2.grade_id = #{next_grade[:id]}
+                                  and e2.student_id = enrollments.student_id
+                                  and date_part('year', e2.enrolled_at) = #{next_year}
+         where enrollments.grade_id = #{grade[:id]}
+           and date_part('year', enrollments.enrolled_at) = #{year}
+      eos
+
+      if campus
+        sql << " and enrollments.campus_id = #{campus[:id]}"
+      end
+
+      rec = db.select_one(sql)
+      total = rec[:total].to_i
+      percent_reenrolled = total == 0 ? 0 : rec[:reenrolled].to_f / total * 100
+      this_grade << percent_reenrolled
+    end
+  end
+
+  name = campus ? campus[:name] : "all"
+  path = "/tmp/export-data-%s.csv" % [make_safe_name(name)]
+  FasterCSV.open(path, "w") do |out|
+    out << ['grade', years].flatten
+    grades.each do |grade|
+      out << [grade[:name], data[grade[:name]]].flatten
+    end
+  end
+  path
+end
+
+puts enrollment_rate_by_grade(db)
+campuses.each do |campus|
+  puts enrollment_rate_by_grade(db, campus)
+end
+
+puts enrollment_rate(db)
+campuses.each do |campus|
+  puts enrollment_rate(db, campus)
+end
