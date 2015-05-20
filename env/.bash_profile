@@ -14,8 +14,11 @@ export PATH=/opt/local/bin:/opt/local/sbin:$PATH
 PATH="/Library/Frameworks/Python.framework/Versions/3.4/bin:${PATH}"
 export PATH
 
-export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
-source ~/.rvm/scripts/rvm
-
+if test -d "~/.rvm"
+then
+  export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
+  source ~/.rvm/scripts/rvm
+fi
+  
 export NVM_DIR="/Users/mbryzek/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm

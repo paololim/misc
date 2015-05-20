@@ -1,6 +1,6 @@
 umask 0002
 
-export PATH="$HOME/bin:$PATH:/web/apidoc-cli/bin:/Applications/Postgres.app/Contents/Versions/9.4/bin"
+export PATH="$HOME/bin:$PATH:/web/apidoc-cli/bin:/Applications/Postgres.app/Contents/Versions/9.4/bin:/usr/local/share/scala-2.11.6/bin"
 
 . ~/.alias
 
@@ -13,7 +13,7 @@ export GIT_PS1_SEPERATEOUTPUT=1
 export GIT_PS1_SHOWUNTRACKEDFILES=1
 export GIT_PS1_SHOWSTASHSTATE=1
 export GIT_PS1_SHOWUPSTREAM="auto"
-source /web/user-mbryzek/env/git-completion.bash-10b2a48
+source /web/misc/env/git-completion.bash-10b2a48
 source ~/.alias
 export PS1="$GREEN\u@\h $YELLOW\w$RED\$(__git_ps1 \" (%s)\") $WHITE\t \n$ "
 
