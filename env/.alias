@@ -1,2 +1,26 @@
+alias ls='ls -F'
+alias la='ls -al'
+alias rm='rm -i'
 
-alias emacs='/Applications/Emacs.app/Contents/MacOS/Emacs'
+if [ `uname` != 'Linux' ]; then
+  alias emacs='/Applications/Emacs.app/Contents/MacOS/Emacs -fg white -bg black'
+fi
+
+#alias rubydir='cd /opt/local/lib/ruby/gems/1.8/gems'
+#alias svc='sudo svc'
+#alias svstat='sudo svstat'
+
+export PATH=/Applications/Postgres.app/Contents/Versions/9.3/bin:$PATH:/web/tools/bin
+
+alias ps='ps -ax'
+
+alias clean='echo "find . -type f -name "*~" -o -name "\#*" -o -name "\.\#*" | xargs rm -f"; find . -type f -name "*~" -o -name "\#*" -o -name "\.\#*" | xargs rm -f'
+
+alias cnb='git checkout master; git branch | grep "tmp\-" | xargs git branch -D'
+alias nb='git checkout master; git branch | grep "tmp\-" | xargs git branch -D; git checkout -b tmp-`uuid`'
+
+alias git-delete-branch-except-master='git branch | grep -v master | xargs git branch -D'
+
+alias start-admin='GILT_DEFAULT_SUBSITE=us RAILS_ENV=development script/server thin'
+
+alias superuserme="psql -U postgres -c 'alter user mbryzek superuser' postgres"
