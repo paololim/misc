@@ -8,11 +8,11 @@
 $basedir = shift(@ARGV) || die("Specify base dir with the full path\n\n");
 $basedir =~ s!/$!!;
 
-my %changeHash = ('request.apidocClient' => 'request.api');
+my %changeHash = ('2.11.6' => '2.11.7');
 
 my $find_only = shift(ARGV) || 0;
 
-my @fileTypes = ('.rb', '.erb', '.js', '.html', '.scala', '.yml', 'routes');
+my @fileTypes = ('.rb', '.erb', '.js', '.html', '.scala', '.yml', 'routes', '.txt', '.json', '.sbt');
 
 my ($map,$dirList) = readDir($basedir);
 @dirs = @$dirList;
@@ -135,6 +135,10 @@ sub readDir {
     closedir(DIR);
     foreach $file (@fileList) {
         next if ($file =~ /~$/ || $file eq "." || $file eq "..");
+	if ($file eq ".git") {
+	    print "Skipping .git dir\n";
+	    next;
+	}
         $testFile = $cwd.'/'.$file;
         if (-d $testFile) {
             if ($recurse) {
