@@ -17,3 +17,8 @@ source /web/misc/env/git-completion.bash-10b2a48
 source ~/.alias
 export PS1="$GREEN\u@\h $YELLOW\w$RED\$(__git_ps1 \" (%s)\") $WHITE\t \n$ "
 
+export GOPATH=~/go
+export GOBIN=$GOPATH/bin
+export PATH=$PATH:$GOBIN
+
+eval "$(hub alias -s)"
