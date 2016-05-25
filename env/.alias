@@ -24,3 +24,5 @@ alias git-delete-branch-except-master='git branch | grep -v master | xargs git b
 alias start-admin='GILT_DEFAULT_SUBSITE=us RAILS_ENV=development script/server thin'
 
 alias superuserme="psql -U postgres -c 'alter user mbryzek superuser' postgres"
+
+alias dcps='docker ps --format "table {{.ID}}\t{{.Image}}\t{{.Ports}}\t{{.Status}}"'
