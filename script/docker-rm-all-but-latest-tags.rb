@@ -51,7 +51,7 @@ class Tag
   end
   
   def Tag.parse(value)
-    if md = value.match(/^(\d+)\.(\d+)\.(\d+)$/)
+    if md = value.match(/^[vr]?(\d+)\.(\d+)\.(\d+)$/)
       Tag.new(md[1].to_i, md[2].to_i, md[3].to_i)
     else
       nil
