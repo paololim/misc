@@ -8,7 +8,10 @@
 $basedir = shift(@ARGV) || die("Specify base dir with the full path\n\n");
 $basedir =~ s!/$!!;
 
-my %changeHash = ('2.11.6' => '2.11.7');
+my %changeHash = (
+    'flowAuthHeaders' => 'authHeaders',
+    'FlowAuthHeaders' => 'AuthHeaders'
+    );
 
 my $find_only = shift(ARGV) || 0;
 
