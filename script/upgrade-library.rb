@@ -169,6 +169,23 @@ repos = {
     'flowcommerce/lib-email',
     'flowcommerce/lib-experience-event',
     'flowcommerce/lib-organization-event',
+  ],
+
+  "lib-currency-event" => [
+    'flowcommerce/currency'
+  ],
+
+  "lib-logistics" => [
+    'flowcommerce/tracking'
+  ],
+
+  "lib-message-event" => [
+    'flowcommerce/message'
+  ],
+
+  "lib-email" => [
+    'flowcommerce/email',
+    'flowcommerce/user'
   ]
 }
 
