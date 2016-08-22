@@ -170,6 +170,22 @@ repos = {
     'flowcommerce/lib-experience-event',
     'flowcommerce/lib-organization-event',
   ],
+  
+  "lib-price" => [
+    'flowcommerce/experience',
+    'flowcommerce/fulfillment',
+    'flowcommerce/catalog',
+    'flowcommerce/harmonization',
+    'flowcommerce/metric'
+  ],
+
+  "lib-catalog-event" => [
+    'flowcommerce/harmonization',
+    'flowcommerce/fulfillment',
+    'flowcommerce/metric',
+    'flowcommerce/webhook',
+    'flowcommerce/catalog'
+  ],
 
   "lib-currency-event" => [
     'flowcommerce/currency'
