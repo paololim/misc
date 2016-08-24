@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
-load 'git.rb'
+dir = File.dirname(__FILE__)
+load File.join(dir, 'git.rb')
 
 group_id = ARGV.shift.to_s.strip
 artifact_id = ARGV.shift.to_s.strip
