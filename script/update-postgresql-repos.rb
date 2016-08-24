@@ -65,7 +65,7 @@ git.checkout("flowcommerce/docker") do |docker|
         end
 
         if !added.empty? || !deleted.empty?
-          git.run("git commit -m 'Upgrade lib-postgresql' %s" % added.join(" "))
+          git.run("git commit -m 'Upgrade lib-postgresql' %s %s" % [added.join(" "), deleted.join(" ")])
           git.run("git push origin master")
           git.run("dev tag")
           git.run("dev build_docker_image")
