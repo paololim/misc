@@ -3,7 +3,7 @@
 dir = File.dirname(__FILE__)
 load File.join(dir, 'git.rb')
 
-repos = %w(flowvault/payment-postgresql flowcommerce/token-postgresql flowcommerce/message-postgresql flowcommerce/message-postgresql flowcommerce/tracking-postgresql flowcommerce/label-postgresql flowcommerce/inventory-postgresql flowcommerce/fulfillment-postgresql flowcommerce/ratecard-postgresql flowcommerce/catalog-postgresql flowcommerce/experience-postgresql flowcommerce/metric-postgresql flowcommerce/lib-postgresql flowcommerce/organization-postgresql flowcommerce/harmonization-postgresql flowcommerce/webhook-postgresql flowcommerce/currency-postgresql flowcommerce/delta-postgresql flowcommerce/book-postgresql flowcommerce/registry-postgresql flowcommerce/search-postgresql flowcommerce/splashpage-postgresql flowcommerce/research-postgresql flowcommerce/email-postgresql flowcommerce/email-postgresql flowcommerce/classification-postgresql flowcommerce/user-postgresql flowcommerce/dependency-postgresql flowcommerce/demo-postgresql)
+repos = %w(flowvault/payment-postgresql flowcommerce/token-postgresql flowcommerce/message-postgresql flowcommerce/message-postgresql flowcommerce/tracking-postgresql flowcommerce/label-postgresql flowcommerce/inventory-postgresql flowcommerce/fulfillment-postgresql flowcommerce/ratecard-postgresql flowcommerce/catalog-postgresql flowcommerce/experience-postgresql flowcommerce/metric-postgresql flowcommerce/organization-postgresql flowcommerce/harmonization-postgresql flowcommerce/webhook-postgresql flowcommerce/currency-postgresql flowcommerce/delta-postgresql flowcommerce/book-postgresql flowcommerce/registry-postgresql flowcommerce/search-postgresql flowcommerce/splashpage-postgresql flowcommerce/research-postgresql flowcommerce/email-postgresql flowcommerce/email-postgresql flowcommerce/classification-postgresql flowcommerce/user-postgresql flowcommerce/dependency-postgresql flowcommerce/demo-postgresql)
 
 git = Git.new
 
@@ -28,6 +28,11 @@ git.checkout("flowcommerce/docker") do |docker|
         added = []
         deleted = []
 
+        if !File.directory?("scripts")
+          puts "WARNINGS: %s/%s does not have a scripts subdirectory - skipping" % [r, target]
+          next
+        end
+        
         upgrades.each do |source|    
           target = File.join("scripts", File.basename(source))
           if File.exists?(target)
