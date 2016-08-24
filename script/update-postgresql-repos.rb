@@ -48,8 +48,6 @@ git.checkout("flowcommerce/docker") do |docker|
           git.run("dev build_docker_image")
         end
       end
-
-      break
     end
   end
 end
