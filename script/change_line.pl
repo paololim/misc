@@ -9,8 +9,8 @@ $basedir = shift(@ARGV) || die("Specify base dir with the full path\n\n");
 $basedir =~ s!/$!!;
 
 my %changeHash = (
-    'flowAuthHeaders' => 'authHeaders',
-    'FlowAuthHeaders' => 'AuthHeaders'
+    'left join processor.' => 'join journal_queue.',
+    'processor on processor.journal_id = journal.journal_id' =>  'queue on queue.journal_id = journal.journal_id'
     );
 
 my $find_only = shift(ARGV) || 0;

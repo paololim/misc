@@ -1,5 +1,7 @@
 #!/usr/bin/env ruby
 
+load 'git.rb'
+
 group_id = ARGV.shift.to_s.strip
 artifact_id = ARGV.shift.to_s.strip
 version = ARGV.shift.to_s.strip
@@ -12,6 +14,7 @@ end
 class Upgrader
 
   def initialize(group_id, artifact_id, version)
+    @git = Git.new
     @group_id = group_id
     @artifact_id = artifact_id
     @version = version
@@ -20,28 +23,8 @@ class Upgrader
   def upgrade(owner, repo)
     puts "%s/%s" % [owner, repo]
 
-    local_checkout_root = "/web/gitcheckouts_for_upgrade"
-    owner_dir = File.join(local_checkout_root, owner)
-
-    if !File.directory?(owner_dir)
-      run("mkdir -p #{owner_dir}")
-    end
-
-    dir = File.join(owner_dir, repo)
-
-    if File.exists?(dir)
-      Dir.chdir(dir) do
-        run("git pull --quiet")
-      end
-
-    else
-      Dir.chdir(owner_dir) do
-        run("git clone git@github.com:%s/%s.git" % [owner, repo])
-      end
-    end
-  
-    Dir.chdir(dir) do
-      build = File.join(dir, "build.sbt")
+    @git.checkout("%s/%s" % [owner, repo]) do
+      build = "build.sbt"
       if File.exists?(build)
         upgrade_file(build)
         puts ""
@@ -51,35 +34,8 @@ class Upgrader
     end
   end
 
-  def run(command)
-    puts " ==> " + command
-    if !system(command)
-      puts "FAILED"
-      exit(1)
-    end
-  end
-
   def clean(value)
     value.strip.sub(/,$/, '').sub(/^\"+/, '').sub(/\"+$/, '').sub(/^\'+/, '').sub(/\'+$/, '')
-  end
-
-  def with_tmp_branch(name)
-    current = current_branch
-    current_date = Time.now.strftime("%Y%m%d_%H%M")
-    tmp = "upgrade_#{name}_#{current_date}"
-    begin
-      run("git checkout master")
-      run("git pull origin --rebase")
-      run("git checkout -b #{tmp}")
-      yield tmp
-    ensure
-      run("git checkout #{current}")
-      run("git branch -D #{tmp}")
-    end
-  end
-
-  def current_branch
-    `git rev-parse --abbrev-ref HEAD`.strip
   end
 
   def upgrade_file(path)
@@ -125,9 +81,9 @@ class Upgrader
         commands << "git push origin {branch_name}"
         commands << "hub pull-request -m '%s'" % msg
 
-        with_tmp_branch("%s.%s" % [@group_id, @artifact_id]) do |name|
+        @git.with_tmp_branch("%s.%s" % [@group_id, @artifact_id]) do |name|
           commands.each do |cmd|
-            run(cmd.sub(/{branch_name}/, name))
+            @git.run(cmd.sub(/{branch_name}/, name))
           end
         end
       end
@@ -188,20 +144,42 @@ repos = {
   ],
 
   "lib-currency-event" => [
-    'flowcommerce/currency'
+    'flowcommerce/currency',
+    'flowcommerce/metric'
   ],
 
+  "lib-harmonization-event" => [
+    'flowcommerce/harmonization',
+    'flowcommerce/metric',
+    'flowcommerce/webhook'
+  ],
+  
+  "lib-experience-event" => [
+    'flowcommerce/experience',
+    'flowcommerce/metric',
+    'flowcommerce/webhook'
+  ],
+  
+  "lib-organization-event" => [
+    'flowcommerce/experience',
+    'flowcommerce/metric',
+    'flowcommerce/organization'
+  ],
+  
   "lib-logistics" => [
     'flowcommerce/tracking'
   ],
 
   "lib-message-event" => [
+    'flowcommerce/fulfillment',
     'flowcommerce/message'
   ],
 
   "lib-email" => [
+    'flowcommerce/catalog',
     'flowcommerce/email',
-    'flowcommerce/user'
+    'flowcommerce/organization',
+    'flowcommerce/user',
   ]
 }
 
