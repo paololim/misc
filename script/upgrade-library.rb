@@ -106,7 +106,7 @@ upgrader = Upgrader.new(group_id, artifact_id, version)
 
 ## TODO: Fetch this from dependency
 repos = {
-  "lib-play" => [
+  "io.flow.lib-play" => [
     'flowcommerce/lib-algolia',
     'flowcommerce/lib-event',
     'flowcommerce/lib-logistics',
@@ -122,7 +122,7 @@ repos = {
     'flowvault/payment'
   ],
   
-  "lib-event" => [
+  "io.flow.lib-event" => [
     'flowcommerce/lib-message-event',
     'flowcommerce/lib-catalog-event',
     'flowcommerce/lib-harmonization-event',
@@ -132,7 +132,7 @@ repos = {
     'flowcommerce/lib-organization-event',
   ],
   
-  "lib-price" => [
+  "io.flow.lib-price" => [
     'flowcommerce/experience',
     'flowcommerce/fulfillment',
     'flowcommerce/catalog',
@@ -140,7 +140,7 @@ repos = {
     'flowcommerce/metric'
   ],
 
-  "lib-catalog-event" => [
+  "io.flow.lib-catalog-event" => [
     'flowcommerce/harmonization',
     'flowcommerce/fulfillment',
     'flowcommerce/metric',
@@ -148,46 +148,46 @@ repos = {
     'flowcommerce/catalog'
   ],
 
-  "lib-currency-event" => [
+  "io.flow.lib-currency-event" => [
     'flowcommerce/currency',
     'flowcommerce/metric'
   ],
 
-  "lib-harmonization-event" => [
+  "io.flow.lib-harmonization-event" => [
     'flowcommerce/harmonization',
     'flowcommerce/metric',
     'flowcommerce/webhook'
   ],
   
-  "lib-experience-event" => [
+  "io.flow.lib-experience-event" => [
     'flowcommerce/experience',
     'flowcommerce/metric',
     'flowcommerce/webhook'
   ],
   
-  "lib-organization-event" => [
+  "io.flow.lib-organization-event" => [
     'flowcommerce/experience',
     'flowcommerce/metric',
     'flowcommerce/organization'
   ],
   
-  "lib-logistics" => [
+  "io.flow.lib-logistics" => [
     'flowcommerce/tracking'
   ],
 
-  "lib-message-event" => [
+  "io.flow.lib-message-event" => [
     'flowcommerce/fulfillment',
     'flowcommerce/message'
   ],
 
-  "lib-email" => [
+  "io.flow.lib-email" => [
     'flowcommerce/catalog',
     'flowcommerce/email',
     'flowcommerce/organization',
     'flowcommerce/user',
   ],
 
-  "lib-reference" => [
+  "io.flow.lib-reference" => [
     'flowcommerce/lib-price',
     'flowcommerce/lib-message-event',
     'flowcommerce/tracking',
@@ -201,12 +201,20 @@ repos = {
     'flowcommerce/location',
     'flowcommerce/ratecard',
     'flowcommerce/research',
+  ],
+
+  'com.sendgrid.sendgrid-java' => [
+    'flowcommerce/delta',
+    'flowcommerce/dependency',
+    'flowcommerce/apidoc',
+    'flowcommerce/email'
   ]
 }
 
-all = repos[artifact_id]
+key = "#{group_id}.#{artifact_id}"
+all = repos[key]
 if all.nil?
-  puts "No repos configured for %s" % artifact_id
+  puts "No repos configured for %s" % key
 else
   all.each do |repo|
     owner, name = repo.split("/", 2)
