@@ -22,7 +22,11 @@ class Upgrader
   end
 
   def upgrade(owner, repo)
-    puts "%s/%s" % [owner, repo]
+    num = 60
+    label = "--- %s/%s" % [owner, repo]
+    puts "-" * num
+    puts label + (" " * (num - label.size - 3)) + "---"
+    puts "-" * num
 
     @git.checkout("%s/%s" % [owner, repo]) do
       build = "build.sbt"
@@ -181,6 +185,22 @@ repos = {
     'flowcommerce/email',
     'flowcommerce/organization',
     'flowcommerce/user',
+  ],
+
+  "lib-reference" => [
+    'flowcommerce/lib-price',
+    'flowcommerce/lib-message-event',
+    'flowcommerce/tracking',
+    'flowcommerce/classification',
+    'flowvault/payment',
+    'flowcommerce/search',
+    'flowcommerce/splashpage',
+    'flowcommerce/ratecard',
+    'flowcommerce/organization',
+    'flowcommerce/currency',
+    'flowcommerce/location',
+    'flowcommerce/ratecard',
+    'flowcommerce/research',
   ]
 }
 
