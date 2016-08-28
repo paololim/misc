@@ -206,7 +206,7 @@ repos = {
   'com.sendgrid.sendgrid-java' => [
     'flowcommerce/delta',
     'flowcommerce/dependency',
-    'flowcommerce/apidoc',
+    'mbryzek/apidoc',
     'flowcommerce/email'
   ]
 }
