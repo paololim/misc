@@ -143,6 +143,7 @@ repos = {
   "io.flow.lib-catalog-event" => [
     'flowcommerce/harmonization',
     'flowcommerce/fulfillment',
+    'flowcommerce/label',
     'flowcommerce/metric',
     'flowcommerce/webhook',
     'flowcommerce/catalog'
@@ -193,6 +194,7 @@ repos = {
     'flowcommerce/tracking',
     'flowcommerce/classification',
     'flowvault/payment',
+    'flowcommerce/label',
     'flowcommerce/search',
     'flowcommerce/splashpage',
     'flowcommerce/ratecard',
@@ -208,6 +210,15 @@ repos = {
     'flowcommerce/dependency',
     'mbryzek/apidoc',
     'flowcommerce/email'
+  ],
+
+  'com.amazonaws.aws-java-sdk-dynamodb' => [
+    'flowcommerce/experience',
+    'flowcommerce/metric',
+  ],
+
+  'com.amazonaws.aws-java-sdk-kinesis' => [
+    'flowcommerce/lib-event'
   ]
 }
 
