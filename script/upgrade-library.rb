@@ -219,6 +219,11 @@ repos = {
 
   'com.amazonaws.aws-java-sdk-kinesis' => [
     'flowcommerce/lib-event'
+  ],
+
+  'com.amazonaws.aws-java-sdk-s3' => [
+    'flowcommerce/fulfillment',
+    'flowvault/environment-provider'
   ]
 }
 
