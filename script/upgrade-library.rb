@@ -172,6 +172,13 @@ repos = {
     'flowcommerce/organization'
   ],
   
+  "io.flow.lib-query" => [
+    'flowcommerce/inventory',
+    'flowcommerce/fulfillment',
+    'flowcommerce/catalog',
+    'flowcommerce/search'
+  ],
+  
   "io.flow.lib-logistics" => [
     'flowcommerce/tracking'
   ],
